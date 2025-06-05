@@ -96,9 +96,44 @@ router.post('/add-custom-unit', (req, res) => {
     if (!conversionRatios[type]) {
       conversionRatios[type] = {};
     }
+    const typeMap = conversionRatios[type];
 
-    conversionRatios[type][from] = 1;
-    conversionRatios[type][to] = ratio;
+    const fromExists = typeMap.hasOwnProperty(from);
+    const toExists = typeMap.hasOwnProperty(to);
+    let baseUnit = null;
+    let baseRatio = Infinity;
+  
+    for (const [unit, value] of Object.entries(typeMap)) {
+      if (value < baseRatio) {
+        baseRatio = value;
+        baseUnit = unit;
+      }
+    }
+  
+    if (fromExists && toExists) {
+      typeMap[to] = typeMap[from] * ratio;
+    } else if (fromExists) {
+      typeMap[to] = typeMap[from] * ratio;
+    } else if (toExists) {
+      typeMap[from] = typeMap[to] / ratio;
+    } else if (baseUnit) {
+      typeMap[from] = baseRatio * ratio;
+      typeMap[to] = baseRatio;
+    } else {
+      typeMap[from] = 1;
+      typeMap[to] = ratio;
+    }
+    const entries = Object.entries(typeMap);
+    const minEntry = entries.reduce((min, [unit, val]) => val < min[1] ? [unit, val] : min, entries[0]);
+  
+    const [newBaseUnit, newBaseValue] = minEntry;
+  
+    if (newBaseValue < 1) {
+      const factor = 1 / newBaseValue;
+      Object.keys(typeMap).forEach(key => {
+        typeMap[key] *= factor;
+      });
+    }
   });
 
   if (errors.length > 0) {

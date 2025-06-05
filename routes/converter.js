@@ -82,7 +82,6 @@ router.get('/convert', (req, res) => {
     return res.status(400).json({ error: `Unsupported conversion type: ${type}` });
   }
 
-  // Handle temperature conversion separately
   if (type === 'temperature') {
     const converted = convertTemperature(numericValue, from, to);
     if (converted === null) {
@@ -91,7 +90,6 @@ router.get('/convert', (req, res) => {
     return res.json({ result: converted, unit: to });
   }
 
-  // Generic ratio-based conversion
   const fromRatio = ratios[from];
   const toRatio = ratios[to];
 
